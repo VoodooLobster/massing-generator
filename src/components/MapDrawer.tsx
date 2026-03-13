@@ -16,91 +16,98 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    // Load Google Maps API dynamically
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error("Google Maps API key not found");
+      return;
+    }
 
-    // Initialize map
-    map.current = new (window as any).google.maps.Map(mapContainer.current, {
-      center: { lat: 40.7128, lng: -74.006 }, // Default to NYC
-      zoom: 15,
-      mapTypeId: "satellite",
-      styles: [
-        {
-          elementType: "labels",
-          stylers: [{ visibility: "off" }],
-        },
-      ],
-    });
+    // Check if Google Maps is already loaded
+    if ((window as any).google?.maps) {
+      initializeMap();
+    } else {
+      // Load the script
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry`;
+      script.async = true;
+      script.onload = () => {
+        initializeMap();
+      };
+      script.onerror = () => {
+        console.error("Failed to load Google Maps API");
+      };
+      document.head.appendChild(script);
+    }
 
-    // Initialize Drawing Manager
-    drawingManager.current = new (window as any).google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: true,
-      drawingControlOptions: {
-        position: (window as any).google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [
-          (window as any).google.maps.drawing.OverlayType.POLYGON,
-          (window as any).google.maps.drawing.OverlayType.RECTANGLE,
+    function initializeMap() {
+      if (!mapContainer.current) return;
+
+      // Initialize map
+      map.current = new (window as any).google.maps.Map(mapContainer.current, {
+        center: { lat: 40.7128, lng: -74.006 },
+        zoom: 15,
+        mapTypeId: "satellite",
+        styles: [
+          {
+            elementType: "labels",
+            stylers: [{ visibility: "off" }],
+          },
         ],
-      },
-      polygonOptions: {
-        fillColor: "#0066cc",
-        fillOpacity: 0.3,
-        strokeColor: "#0066cc",
-        strokeWeight: 2,
-        editable: true,
-        draggable: true,
-      },
-      rectangleOptions: {
-        fillColor: "#0066cc",
-        fillOpacity: 0.3,
-        strokeColor: "#0066cc",
-        strokeWeight: 2,
-        editable: true,
-        draggable: true,
-      },
-    });
+      });
 
-    drawingManager.current.setMap(map.current);
+      // Initialize Drawing Manager
+      drawingManager.current = new (window as any).google.maps.drawing.DrawingManager({
+        drawingMode: null,
+        drawingControl: true,
+        drawingControlOptions: {
+          position: (window as any).google.maps.ControlPosition.TOP_CENTER,
+          drawingModes: [
+            (window as any).google.maps.drawing.OverlayType.POLYGON,
+            (window as any).google.maps.drawing.OverlayType.RECTANGLE,
+          ],
+        },
+        polygonOptions: {
+          fillColor: "#0066cc",
+          fillOpacity: 0.3,
+          strokeColor: "#0066cc",
+          strokeWeight: 2,
+          editable: true,
+          draggable: true,
+        },
+        rectangleOptions: {
+          fillColor: "#0066cc",
+          fillOpacity: 0.3,
+          strokeColor: "#0066cc",
+          strokeWeight: 2,
+          editable: true,
+          draggable: true,
+        },
+      });
 
-    // Listen for drawing completion
-    drawingManager.current.addListener(
-      "overlaycomplete",
-      (event: google.maps.drawing.OverlayCompleteEvent) => {
+      drawingManager.current.setMap(map.current);
+
+      // Listen for drawing completion
+      drawingManager.current.addListener("overlaycomplete", (event: any) => {
         if (polygon.current) {
           polygon.current.setMap(null);
         }
 
-        polygon.current = event.overlay as google.maps.Polygon;
+        polygon.current = event.overlay as any;
         polygon.current.setEditable(true);
 
-        // Get boundary and emit
-        const path = (polygon.current as google.maps.Polygon)
-          .getPath()
-          .getArray();
+        const path = (polygon.current as any).getPath().getArray();
         onBoundaryChange(path);
 
-        // Update on edit
-        const pathListener = (polygon.current as google.maps.Polygon)
-          .getPath()
-          .addListener("set_at", () => {
-            const updatedPath = (polygon.current as google.maps.Polygon)
-              .getPath()
-              .getArray();
-            onBoundaryChange(updatedPath);
-          });
+        (polygon.current as any).getPath().addListener("set_at", () => {
+          const updatedPath = (polygon.current as any).getPath().getArray();
+          onBoundaryChange(updatedPath);
+        });
 
-        // Stop drawing
         drawingManager.current?.setDrawingMode(null);
         setIsDrawing(false);
-      }
-    );
-
-    // Cleanup
-    return () => {
-      if (drawingManager.current) {
-        drawingManager.current.setMap(null);
-      }
-    };
+      });
+    }
   }, [onBoundaryChange]);
 
   const toggleDrawing = () => {
@@ -110,7 +117,7 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
       drawingManager.current.setDrawingMode(null);
     } else {
       drawingManager.current.setDrawingMode(
-        google.maps.drawing.OverlayType.POLYGON
+        (window as any).google.maps.drawing.OverlayType.POLYGON
       );
     }
     setIsDrawing(!isDrawing);
