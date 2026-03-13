@@ -130,8 +130,12 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
   return (
     <div className="map-drawer">
       <div className="map-controls">
-        <button className={`btn btn-primary ${isDrawing ? "active" : ""}`} onClick={toggleDrawing}>
-          ✏️ Draw Lot Boundary
+        <button 
+          className={`btn btn-primary ${isDrawing ? "active" : ""}`} 
+          onClick={toggleDrawing}
+          type="button"
+        >
+          ✏️ {isDrawing ? "Stop Drawing" : "Draw Lot Boundary"}
         </button>
         <button className="btn btn-secondary" onClick={clearBoundary}>
           🗑️ Clear
