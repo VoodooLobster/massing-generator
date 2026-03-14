@@ -26,35 +26,40 @@ export function App() {
   const [address, setAddress] = useState("123 Commercial Ave, Downtown City");
   const [manualLotSize, setManualLotSize] = useState(50000); // sq ft
 
-  // Calculate lot size from drawn boundary
-  const lotSize = drawnBoundary.length > 0 
-    ? calculateLotSizeFromBoundary(drawnBoundary)
+  // Calculate lot size from drawn boundary using proper polygon area formula
+  const lotSize = drawnBoundary.length > 2 
+    ? calculatePolygonArea(drawnBoundary)
     : manualLotSize;
 
-  function calculateLotSizeFromBoundary(boundary: any[]): number {
+  function calculatePolygonArea(boundary: any[]): number {
     if (boundary.length < 3) return manualLotSize;
 
-    // Simple lat/lng to feet conversion
-    let minLat = boundary[0].lat?.() || boundary[0].lat;
-    let maxLat = minLat;
-    let minLng = boundary[0].lng?.() || boundary[0].lng;
-    let maxLng = minLng;
-
-    boundary.forEach((point: any) => {
-      const lat = point.lat?.() || point.lat;
-      const lng = point.lng?.() || point.lng;
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
+    // Extract lat/lng properly from Google Maps LatLng objects
+    const coords = boundary.map((point: any) => {
+      const lat = typeof point.lat === 'function' ? point.lat() : point.lat;
+      const lng = typeof point.lng === 'function' ? point.lng() : point.lng;
+      return { lat, lng };
     });
 
-    // Rough conversion: 1 degree lat ≈ 364,000 feet, 1 degree lng ≈ 288,000 feet
-    const latFeet = (maxLat - minLat) * 364000;
-    const lngFeet = (maxLng - minLng) * 288000;
-    const estimatedSize = Math.round(latFeet * lngFeet);
+    // Shoelace formula for polygon area in degrees
+    let area = 0;
+    for (let i = 0; i < coords.length; i++) {
+      const j = (i + 1) % coords.length;
+      area += coords[i].lng * coords[j].lat;
+      area -= coords[j].lng * coords[i].lat;
+    }
+    area = Math.abs(area) / 2;
 
-    return estimatedSize > 0 ? estimatedSize : manualLotSize;
+    // Convert degrees² to approximate square feet
+    // At ~40°N latitude: 1 degree ≈ 288,000 feet (lng), 1 degree ≈ 364,000 feet (lat)
+    const avgLat = coords.reduce((sum, c) => sum + c.lat, 0) / coords.length;
+    const lngFeetPerDegree = 288000 * Math.cos((avgLat * Math.PI) / 180);
+    const latFeetPerDegree = 364000;
+    
+    const estimatedSqFt = Math.round(area * lngFeetPerDegree * latFeetPerDegree);
+
+    console.log(`Calculated lot size: ${estimatedSqFt} sq ft`);
+    return estimatedSqFt > 1000 ? estimatedSqFt : manualLotSize;
   }
 
   // Building inputs
@@ -159,6 +164,7 @@ export function App() {
             <MapDrawer
               onBoundaryChange={setDrawnBoundary}
               onAddressChange={setAddress}
+              address={address}
             />
           </section>
 
