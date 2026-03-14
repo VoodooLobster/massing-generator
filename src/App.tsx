@@ -183,7 +183,7 @@ export function App() {
               onFARChange={setTargetFAR}
               targetFLR={targetFLR}
               onFLRChange={setTargetFLR}
-              manualLotSize={manualLotSize}
+              manualLotSize={lotSize}
               onLotSizeChange={setManualLotSize}
               residentialSF={residentialSF}
               onResidentialChange={setResidentialSF}
