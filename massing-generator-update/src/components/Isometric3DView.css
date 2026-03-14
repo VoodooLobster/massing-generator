@@ -1,0 +1,119 @@
+/**
+ * Isometric 3D View Styling
+ * 
+ * Layout: Header row with title + download buttons, then large SVG canvas below
+ * Keep this simple and flat for easy iteration on dimensions/spacing
+ */
+
+.isometric-3d-view {
+  width: 100%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+/* Header: Title + Buttons Row */
+.isometric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.isometric-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+/* Action Buttons Group */
+.isometric-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-small {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: white;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-small:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.btn-small:active {
+  background: #ebebeb;
+}
+
+/* Canvas Container */
+.isometric-canvas {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 20px;
+  aspect-ratio: 680 / 720;
+  overflow: auto;
+}
+
+/* SVG inside canvas */
+.isometric-canvas svg {
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.05));
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .isometric-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .isometric-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .isometric-3d-view {
+    padding: 15px;
+  }
+
+  .isometric-header h3 {
+    font-size: 14px;
+  }
+
+  .isometric-actions {
+    gap: 8px;
+  }
+
+  .btn-small {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .isometric-canvas {
+    aspect-ratio: auto;
+    min-height: 300px;
+  }
+}
