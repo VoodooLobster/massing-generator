@@ -22,9 +22,40 @@ export function App() {
   const [showSettings, setShowSettings] = useState(false);
 
   // Map & site data
-  const [drawnBoundary, setDrawnBoundary] = useState<google.maps.LatLng[]>([]);
+  const [drawnBoundary, setDrawnBoundary] = useState<any[]>([]);
   const [address, setAddress] = useState("123 Commercial Ave, Downtown City");
   const [manualLotSize, setManualLotSize] = useState(50000); // sq ft
+
+  // Calculate lot size from drawn boundary
+  const lotSize = drawnBoundary.length > 0 
+    ? calculateLotSizeFromBoundary(drawnBoundary)
+    : manualLotSize;
+
+  function calculateLotSizeFromBoundary(boundary: any[]): number {
+    if (boundary.length < 3) return manualLotSize;
+
+    // Simple lat/lng to feet conversion
+    let minLat = boundary[0].lat?.() || boundary[0].lat;
+    let maxLat = minLat;
+    let minLng = boundary[0].lng?.() || boundary[0].lng;
+    let maxLng = minLng;
+
+    boundary.forEach((point: any) => {
+      const lat = point.lat?.() || point.lat;
+      const lng = point.lng?.() || point.lng;
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+    });
+
+    // Rough conversion: 1 degree lat ≈ 364,000 feet, 1 degree lng ≈ 288,000 feet
+    const latFeet = (maxLat - minLat) * 364000;
+    const lngFeet = (maxLng - minLng) * 288000;
+    const estimatedSize = Math.round(latFeet * lngFeet);
+
+    return estimatedSize > 0 ? estimatedSize : manualLotSize;
+  }
 
   // Building inputs
   const [zoningCodeId, setZoningCodeId] = useState("c2");
@@ -61,7 +92,7 @@ export function App() {
     const inputs: MassingInputs = {
       siteData: {
         address,
-        lotSize: manualLotSize,
+        lotSize: lotSize,
         zonigCodeId: zoningCodeId,
         drawnBoundary,
       },
