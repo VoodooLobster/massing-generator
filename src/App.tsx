@@ -90,7 +90,6 @@ export function App() {
   // Computed outputs
   const [massingOutput, setMassingOutput] = useState<MassingOutput | null>(null);
   const [elevationData, setElevationData] = useState<ElevationData | null>(null);
-  const [show3DView, setShow3DView] = useState(false);
 
   // Recalculate when inputs change
   useEffect(() => {
