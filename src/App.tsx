@@ -224,7 +224,7 @@ export function App() {
                 output={massingOutput}
                 inputs={{
                   address,
-                  lotSize: manualLotSize,
+                  lotSize: lotSize,
                   buildingType,
                   targetFAR,
                   targetFLR,
