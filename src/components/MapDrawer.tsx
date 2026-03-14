@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 interface MapDrawerProps {
   onBoundaryChange: (boundary: any[]) => void;
   onAddressChange: (address: string) => void;
-  address?: string; // Add address prop to trigger geocoding
+  address?: string;
 }
 
 export const MapDrawer: React.FC<MapDrawerProps> = ({
@@ -17,22 +17,14 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
   const polygon = useRef<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  // Initialize map and set up Google Maps
   useEffect(() => {
-    // Geocode address when it changes
-    if (address && map.current && (window as any).google?.maps) {
-      const geocoder = new (window as any).google.maps.Geocoder();
-      geocoder.geocode({ address }, (results: any[], status: string) => {
-        if (status === (window as any).google.maps.GeocoderStatus.OK && results[0]) {
-          const { lat, lng } = results[0].geometry.location;
-          map.current.setCenter({ lat: lat(), lng: lng() });
-          map.current.setZoom(16);
-          console.log(`Geocoded address: ${address}`);
-        } else {
-          console.warn(`Geocoding failed for: ${address}`);
-        }
-      });
-    }
-  }, [address]);
+    const checkGoogleMaps = setInterval(() => {
+      if ((window as any).google?.maps) {
+        clearInterval(checkGoogleMaps);
+        initializeMap();
+      }
+    }, 100);
 
     const timeout = setTimeout(() => {
       clearInterval(checkGoogleMaps);
@@ -116,6 +108,23 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
       clearTimeout(timeout);
     };
   }, [onBoundaryChange]);
+
+  // Geocode address when it changes
+  useEffect(() => {
+    if (address && map.current && (window as any).google?.maps) {
+      const geocoder = new (window as any).google.maps.Geocoder();
+      geocoder.geocode({ address }, (results: any[], status: string) => {
+        if (status === (window as any).google.maps.GeocoderStatus.OK && results[0]) {
+          const { lat, lng } = results[0].geometry.location;
+          map.current.setCenter({ lat: lat(), lng: lng() });
+          map.current.setZoom(16);
+          console.log(`Geocoded address: ${address}`);
+        } else {
+          console.warn(`Geocoding failed for: ${address}`);
+        }
+      });
+    }
+  }, [address]);
 
   const toggleDrawing = () => {
     if (!drawingManager.current || !map.current) return;
