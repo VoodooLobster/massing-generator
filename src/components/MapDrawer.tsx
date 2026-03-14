@@ -3,11 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 interface MapDrawerProps {
   onBoundaryChange: (boundary: any[]) => void;
   onAddressChange: (address: string) => void;
+  address?: string; // Add address prop to trigger geocoding
 }
 
 export const MapDrawer: React.FC<MapDrawerProps> = ({
   onBoundaryChange,
   onAddressChange,
+  address,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -16,13 +18,21 @@ export const MapDrawer: React.FC<MapDrawerProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
-    // Wait for Google Maps to load
-    const checkGoogleMaps = setInterval(() => {
-      if ((window as any).google?.maps) {
-        clearInterval(checkGoogleMaps);
-        initializeMap();
-      }
-    }, 100);
+    // Geocode address when it changes
+    if (address && map.current && (window as any).google?.maps) {
+      const geocoder = new (window as any).google.maps.Geocoder();
+      geocoder.geocode({ address }, (results: any[], status: string) => {
+        if (status === (window as any).google.maps.GeocoderStatus.OK && results[0]) {
+          const { lat, lng } = results[0].geometry.location;
+          map.current.setCenter({ lat: lat(), lng: lng() });
+          map.current.setZoom(16);
+          console.log(`Geocoded address: ${address}`);
+        } else {
+          console.warn(`Geocoding failed for: ${address}`);
+        }
+      });
+    }
+  }, [address]);
 
     const timeout = setTimeout(() => {
       clearInterval(checkGoogleMaps);
